@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตารางการชำระเงิน</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Mode Colors */
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --background-color: #f8f9fa;
+            --card-background: #ffffff;
+            --text-color: #343a40;
+            --border-color: #dee2e6;
+            --header-color: #495057;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
+            --shadow-medium: 0 6px 18px rgba(0, 0, 0, 0.08);
+            --input-border: #ced4da;
+            --focus-border: #80bdff;
+            --highlight-row-bg: #fff3cd; /* Light yellow for highlight */
+            --highlight-row-border: #ffeeba;
+            --table-even-row-bg: #f0f8ff;
+            --note-bg: #e9f7ff;
+        }
+
+        /* Dark Mode Colors */
+        body.dark-mode {
+            --primary-color: #8ab4f8; /* Lighter blue for dark mode primary */
+            --primary-hover-color: #a6c8ff;
+            --background-color: #202124; /* Darker background */
+            --card-background: #2f3032; /* Darker card background */
+            --text-color: #e8eaed; /* Light text */
+            --border-color: #4a4a4a;
+            --header-color: #bdc1c6;
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.2);
+            --shadow-medium: 0 6px 18px rgba(0, 0, 0, 0.3);
+            --input-border: #5f6368;
+            --focus-border: #8ab4f8;
+            --highlight-row-bg: #4a402a; /* Darker yellow for highlight */
+            --highlight-row-border: #6b5a3e;
+            --table-even-row-bg: #3a3b3d;
+            --note-bg: #3b424d;
+            --table-header-text: #202124; /* Ensure header text is readable against light primary color */
+        }
+
+        body {
+            font-family: 'Kanit', sans-serif;
+            margin: 0;
+            padding: 30px 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition for theme change */
+        }
+
+        .container {
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-medium);
+            max-width: 960px;
+            width: 100%;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 35px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .section-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--header-color);
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+            transition: color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .input-group label {
+            flex-basis: 180px;
+            flex-shrink: 0;
+            font-weight: 400;
+            color: var(--header-color);
+            text-align: right;
+            transition: color 0.3s ease;
+        }
+        
+        .input-group input[type="number"],
+        .input-group select {
+            flex-grow: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1em;
+            color: var(--text-color);
+            max-width: 250px;
+            appearance: none;
+            background-color: var(--card-background); /* Ensure input background changes with theme */
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23343a40" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); /* Default arrow for light mode */
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 20px;
+            cursor: pointer;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        /* Dark mode specific arrow color */
+        body.dark-mode .input-group select {
+            background-image: url('data:image/svg+xml;utf8,<svg fill="%23e8eaed" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+        }
+
+        .input-group input[type="number"]:focus,
+        .input-group select:focus {
+            border-color: var(--focus-border);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+        
+        #paymentValueInput {
+            max-width: 250px;
+        }
+
+        /* Adjusted button styles for smaller size */
+        button {
+            display: block;
+            width: fit-content; /* Make button fit its content */
+            margin: 30px auto 0 auto; /* Center the button horizontally */
+            padding: 12px 25px; /* Smaller padding */
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em; /* Smaller font size */
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+            box-shadow: var(--shadow-light);
+        }
+        
+        button:hover {
+            background-color: var(--primary-hover-color);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        #results {
+            margin-top: 40px;
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 25px;
+            background-color: var(--card-background);
+            box-shadow: var(--shadow-light);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        table th, table td {
+            padding: 14px 15px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            transition: border-color 0.3s ease, color 0.3s ease;
+        }
+        
+        table th:last-child, table td:last-child {
+            border-right: none;
+        }
+
+        table thead th {
+            background-color: var(--primary-color);
+            color: var(--text-color); /* Adjusted for readability in dark mode */
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 1px solid var(--primary-color);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        /* Override header text color for dark mode to ensure readability */
+        body.dark-mode table thead th {
+            color: var(--table-header-text); 
+        }
+        
+        table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        table tbody tr:nth-child(even) {
+            background-color: var(--table-even-row-bg);
+            transition: background-color 0.3s ease;
+        }
+        
+        table tbody tr:last-of-type {
+            background-color: var(--highlight-row-bg) !important;
+            font-weight: 600;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        table tfoot th {
+            background-color: var(--primary-color);
+            color: var(--text-color); /* Adjusted for readability in dark mode */
+            font-weight: 600;
+            text-align: center;
+            border-top: 2px solid var(--primary-hover-color);
+            transition: background-color 0.3s ease, color 0.3s ease, border-top-color 0.3s ease;
+        }
+        /* Override footer text color for dark mode */
+        body.dark-mode table tfoot th {
+            color: var(--table-header-text);
+        }
+
+        .note {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: var(--note-bg);
+            border-left: 5px solid var(--primary-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 0.95em;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Dark Mode Toggle Button */
+        .theme-switch-wrapper {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+        }
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+        .theme-switch input {
+            display: none;
+        }
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            background-color: #fff;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .theme-switch-wrapper span {
+            margin-left: 10px;
+            color: var(--text-color);
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .input-group label {
+                width: 100%;
+                text-align: left;
+                margin-bottom: 5px;
+            }
+            .input-group input[type="number"],
+            .input-group select {
+                width: 100%;
+                max-width: none;
+            }
+            .container {
+                padding: 25px;
+            }
+            table th, table td {
+                padding: 10px 8px;
+                font-size: 0.9em;
+            }
+            .theme-switch-wrapper {
+                top: 10px;
+                right: 10px;
+                flex-direction: column;
+                align-items: flex-end;
+            }
+            .theme-switch-wrapper span {
+                margin-top: 5px;
+                margin-left: 0;
+            }
+            /* Adjust button for small screens */
+            button {
+                width: 100%; /* Make it full width on small screens */
+                padding: 12px 15px; /* Adjust padding */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="checkbox">
+            <input type="checkbox" id="checkbox" />
+            <div class="slider round"></div>
+        </label>
+        <span id="theme-text">Light</span>
+    </div>
+
+    <div class="container">
+        <h2>ตารางการชำระเงิน</h2>
+
+        <div class="section-title">ข้อมูลเงินกู้</div>
+        <div class="input-group">
+            <label for="loanAmount">เงินขอกู้ (บาท):</label>
+            <input type="number" id="loanAmount" value="2500000" step="1000">
+        </div>
+
+        <div class="input-group">
+            <label for="interestRate">เรทดอกเบี้ย (% ต่อปี):</label>
+            <input type="number" id="interestRate" value="4.9" step="0.1">
+        </div>
+
+        <div class="input-group">
+            <label for="interestMethod">วิธีคิดดอกเบี้ย:</label>
+            <select id="interestMethod">
+                <option value="30/365">30 / 365</option>
+                <option value="1/12">1 / 12</option>
+            </select>
+        </div>
+        
+        <div class="input-group">
+            <label for="roundTo">ปัดเศษยอดชำระหลัก:</label>
+            <input type="number" id="roundTo" value="100" step="10">
+        </div>
+
+        <div class="section-title">การผ่อนชำระ</div>
+        <div class="input-group">
+            <label for="paymentOption">เลือกการคำนวณจาก:</label>
+            <select id="paymentOption">
+                <option value="amount">เงินผ่อนชำระ</option>
+                <option value="installments">จำนวนงวด</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label id="paymentValueLabel" for="paymentValueInput">เงินผ่อนชำระ (บาท):</label>
+            <input type="number" id="paymentValueInput" value="16400" step="100">
+        </div>
+
+        <div class="input-group">
+            <label for="calculationMethod">สูตรวิธีการคิด:</label>
+            <select id="calculationMethod">
+                <option value="fixedPayment">คงยอด</option>
+                <option value="fixedPrincipal">คงต้น</option>
+            </select>
+        </div>
+
+        <button onclick="calculateLoan()">คำนวณ</button>
+
+        <div id="results">
+            </div>
+
+        <div class="note">
+            <p><strong>หมายเหตุ:</strong></p>
+            <ul>
+                <li>หมายเหตุ : คำนวณแบบเท่ากันทุกงวดให้เลือก จำนวนงวดผ่อนชำระเท่านั้น</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function calculateLoan() {
+            const loanAmount = parseFloat(document.getElementById('loanAmount').value);
+            let paymentValue = parseFloat(document.getElementById('paymentValueInput').value); // Use this single input
+            const interestRate = parseFloat(document.getElementById('interestRate').value) / 100; // แปลงเป็นทศนิยม
+            const interestMethod = document.getElementById('interestMethod').value;
+            const roundTo = parseFloat(document.getElementById('roundTo').value);
+            const calculationMethod = document.getElementById('calculationMethod').value;
+            const paymentOption = document.getElementById('paymentOption').value;
+
+            // Hide results div initially in case of validation errors
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'none';
+            resultsDiv.innerHTML = ''; // Clear previous results
+
+            if (isNaN(loanAmount) || loanAmount <= 0) {
+                alert("กรุณากรอกเงินขอกู้ที่ถูกต้อง");
+                return;
+            }
+            if (isNaN(interestRate) || interestRate <= 0) {
+                alert("กรุณากรอกเรทดอกเบี้ยที่ถูกต้อง");
+                return;
+            }
+            if (isNaN(roundTo) || roundTo <= 0) {
+                alert("กรุณากรอกค่าปัดเศษยอดชำระหลักที่ถูกต้อง");
+                return;
+            }
+            if (isNaN(paymentValue) || paymentValue <= 0) {
+                alert("กรุณากรอกข้อมูลการผ่อนชำระที่ถูกต้อง");
+                return;
+            }
+
+            let principalRemaining = loanAmount;
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>งวดที่</th>
+                            <th>เงินต้น</th>
+                            <th>ดอกเบี้ย</th>
+                            <th>รวมชำระ</th>
+                            <th>คงเหลือ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            const monthlyInterestRate = interestRate / 12; // Base for 1/12 or 30/365 calculations
+            let monthlyPaymentCalculated = 0; // This will hold the actual monthly payment (for fixedPayment method)
+            let installmentsCalculated = 0; // This will hold the actual number of installments (for fixedAmount method)
+
+            if (paymentOption === 'amount') {
+                monthlyPaymentCalculated = paymentValue; // User provided monthly payment
+                
+                if (calculationMethod === 'fixedPrincipal') {
+                    alert("เมื่อเลือก 'คงต้น' ระบบจะคำนวณจาก 'จำนวนงวด' กรุณาเปลี่ยน 'เลือกการคำนวณจาก' เป็น 'จำนวนงวด' หรือเลือก 'คงยอด'");
+                    return;
+                }
+                
+                // If 'fixedPayment' and 'amount' are selected, calculate installments
+                let tempLoan = loanAmount;
+                while (tempLoan > 0 && installmentsCalculated < 10000) { // Safety break for extremely long loans
+                    let interestOnRemaining;
+                    if (interestMethod === '30/365') {
+                        interestOnRemaining = tempLoan * (interestRate / 365) * 30;
+                    } else { // 1/12
+                        interestOnRemaining = tempLoan * monthlyInterestRate;
+                    }
+                    
+                    if (monthlyPaymentCalculated <= interestOnRemaining && tempLoan > 0) {
+                        alert("ยอดผ่อนชำระต่อเดือนน้อยเกินไป ไม่สามารถชำระหนี้หมดได้ด้วยยอดนี้");
+                        return;
+                    }
+
+                    let principalPayment = monthlyPaymentCalculated - interestOnRemaining;
+                    tempLoan -= principalPayment;
+                    installmentsCalculated++;
+                    if (tempLoan <= 0) break;
+                }
+            } else { // paymentOption === 'installments'
+                installmentsCalculated = paymentValue; // User provided number of installments
+                
+                if (calculationMethod === 'fixedPayment') {
+                    let effectivePeriodicRate;
+                    if (interestMethod === '30/365') {
+                        effectivePeriodicRate = (interestRate / 365) * 30;
+                    } else { // 1/12
+                        effectivePeriodicRate = monthlyInterestRate;
+                    }
+
+                    if (effectivePeriodicRate === 0) { // Handle zero interest rate
+                        monthlyPaymentCalculated = loanAmount / installmentsCalculated;
+                    } else {
+                        // PMT = (P * i) / (1 - (1 + i)^-n)
+                        monthlyPaymentCalculated = (loanAmount * effectivePeriodicRate) / (1 - Math.pow(1 + effectivePeriodicRate, -installmentsCalculated));
+                    }
+                    monthlyPaymentCalculated = Math.round(monthlyPaymentCalculated / roundTo) * roundTo; // Apply rounding
+                } else { // fixedPrincipal - monthlyPaymentCalculated is not fixed in this case, calculated per period
+                    // No need to calculate monthlyPaymentCalculated upfront for fixedPrincipal here
+                }
+            }
+
+            // --- Calculation Logic ---
+            let totalInterestPaid = 0;
+            let totalPrincipalPaid = 0;
+            let totalOverallPayment = 0;
+            
+            let paymentSchedule = []; 
+            const finalInstallmentsCount = paymentOption === 'amount' ? installmentsCalculated : paymentValue;
+
+            for (let i = 1; i <= finalInstallmentsCount; i++) {
+                let interestForThisPeriod = 0;
+                if (principalRemaining <= 0) { 
+                    interestForThisPeriod = 0;
+                } else if (interestMethod === '30/365') {
+                    interestForThisPeriod = principalRemaining * (interestRate / 365) * 30;
+                } else { // 1/12
+                    interestForThisPeriod = principalRemaining * monthlyInterestRate;
+                }
+
+                let principalPaymentThisMonth = 0;
+                let totalPaymentThisMonth = 0;
+
+                if (calculationMethod === 'fixedPayment') {
+                    totalPaymentThisMonth = monthlyPaymentCalculated;
+                    
+                    if (i === finalInstallmentsCount) {
+                        const remainingToPay = principalRemaining + interestForThisPeriod;
+                        if (remainingToPay <= monthlyPaymentCalculated + roundTo && remainingToPay >= -0.01) { 
+                             totalPaymentThisMonth = remainingToPay;
+                        } else if (remainingToPay > monthlyPaymentCalculated && principalRemaining > 0) {
+                            totalPaymentThisMonth = remainingToPay;
+                        }
+                    } else if (principalRemaining + interestForThisPeriod < monthlyPaymentCalculated && principalRemaining > 0) { 
+                        totalPaymentThisMonth = principalRemaining + interestForThisPeriod;
+                    }
+
+
+                    principalPaymentThisMonth = totalPaymentThisMonth - interestForThisPeriod;
+                    if (principalPaymentThisMonth < 0) { 
+                        principalPaymentThisMonth = 0; 
+                    }
+
+                } else { // fixedPrincipal
+                    const fixedPrincipalPerInstallment = loanAmount / finalInstallmentsCount;
+                    principalPaymentThisMonth = fixedPrincipalPerInstallment;
+                    
+                    if (i === finalInstallmentsCount) {
+                        principalPaymentThisMonth = principalRemaining; 
+                    }
+
+                    totalPaymentThisMonth = principalPaymentThisMonth + interestForThisPeriod;
+                    totalPaymentThisMonth = Math.round(totalPaymentThisMonth / roundTo) * roundTo; 
+                }
+
+                principalRemaining -= principalPaymentThisMonth;
+                if (Math.abs(principalRemaining) < 0.01) { 
+                    principalRemaining = 0;
+                }
+                
+                totalInterestPaid += interestForThisPeriod;
+                totalPrincipalPaid += principalPaymentThisMonth;
+                totalOverallPayment += totalPaymentThisMonth;
+
+                paymentSchedule.push({
+                    installmentNum: i,
+                    principal: principalPaymentThisMonth,
+                    interest: interestForThisPeriod,
+                    totalPayment: totalPaymentThisMonth,
+                    remaining: principalRemaining
+                });
+
+                // For fixedPayment, stop if loan is fully paid before declared installments
+                if (principalRemaining <= 0 && calculationMethod === 'fixedPayment' && i < finalInstallmentsCount) {
+                    break; 
+                }
+            }
+
+            // Generate HTML from paymentSchedule array
+            paymentSchedule.forEach((row, index) => {
+                let principalCellContent = row.principal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                let totalPaymentCellContent = row.totalPayment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                // Apply bolding based on calculation method
+                if (calculationMethod === 'fixedPrincipal') {
+                    principalCellContent = `<strong>${principalCellContent}</strong>`;
+                } else { // fixedPayment
+                    totalPaymentCellContent = `<strong>${totalPaymentCellContent}</strong>`;
+                }
+
+                tableHTML += `
+                    <tr>
+                        <td>${row.installmentNum}</td>
+                        <td>${principalCellContent}</td>
+                        <td>${row.interest.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        <td>${totalPaymentCellContent}</td>
+                        <td>${row.remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>รวม</th>
+                            <th>${totalPrincipalPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</th>
+                            <th>${totalInterestPaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</th>
+                            <th>${totalOverallPayment.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</th>
+                            <th>${principalRemaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+
+            resultsDiv.innerHTML = tableHTML;
+            resultsDiv.style.display = 'block'; // Show the results div
+        }
+
+        // Handle updating the label and input type for the single payment value field
+        document.addEventListener('DOMContentLoaded', function() {
+            const paymentOptionSelect = document.getElementById('paymentOption');
+            const paymentValueLabel = document.getElementById('paymentValueLabel');
+            const paymentValueInput = document.getElementById('paymentValueInput');
+            const themeSwitch = document.getElementById('checkbox');
+            const themeText = document.getElementById('theme-text');
+
+            function updatePaymentInput() {
+                if (paymentOptionSelect.value === 'amount') {
+                    paymentValueLabel.textContent = 'เงินผ่อนชำระ (บาท):';
+                    paymentValueInput.value = '16400';
+                    paymentValueInput.step = '100';
+                } else { // value === 'installments'
+                    paymentValueLabel.textContent = 'งวดผ่อนชำระ (งวด):';
+                    paymentValueInput.value = '240';
+                    paymentValueInput.step = '1';
+                }
+            }
+
+            function toggleDarkMode() {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    themeText.textContent = 'Dark';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeText.textContent = 'Light';
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+
+            // Set initial state for payment input
+            updatePaymentInput();
+            paymentOptionSelect.addEventListener('change', updatePaymentInput);
+
+            // Set up Dark Mode
+            themeSwitch.addEventListener('change', toggleDarkMode);
+
+            // Load saved theme from localStorage
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                themeSwitch.checked = true;
+                toggleDarkMode(); // Apply dark mode immediately
+            } else {
+                themeSwitch.checked = false;
+                themeText.textContent = 'Light'; // Ensure correct text for light mode
+            }
+        });
+    </script>
+</body>
+</html>
